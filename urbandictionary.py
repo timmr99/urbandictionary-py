@@ -1,5 +1,7 @@
 import sys
 import json
+import textwrap
+
 if sys.version < '3':
     from urllib2 import urlopen
     from urllib import quote as urlquote
@@ -20,13 +22,12 @@ class UrbanDefinition(object):
         self.downvotes = downvotes
 
     def __str__(self):
-        return '%s: %s%s (%d, %d)' % (
-                self.word,
-                self.definition[:50],
-                '...' if len(self.definition) > 50 else '',
-                self.upvotes,
-                self.downvotes
-            )
+        return '%s: %s (%d, %d)' % (
+            self.word,
+            textwrap.wrap(self.definition,80),
+            self.upvotes,
+            self.downvotes
+        )
 
 def _get_urban_json(url):
     f = urlopen(url)
@@ -37,17 +38,17 @@ def _get_urban_json(url):
 def _parse_urban_json(json, check_result=True):
     result = []
     if json is None or any(e in json for e in ('error', 'errors')):
-        raise ValueException('UD: Invalid input for Urban Dictionary API')
+        raise SyntaxError('UD: Invalid input for Urban Dictionary API')
     if check_result and ('list' not in json or len(json['list']) == 0):
         return result
     for definition in json['list']:
         d = UrbanDefinition(
-                definition['word'], 
-                definition['definition'],
-                definition['example'],
-                int(definition['thumbs_up']),
-                int(definition['thumbs_down'])
-            )
+            definition['word'],
+            definition['definition'],
+            definition['example'],
+            int(definition['thumbs_up']),
+            int(definition['thumbs_down'])
+        )
         result.append(d)
     return result
 
